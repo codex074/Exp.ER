@@ -1,4 +1,4 @@
-const CACHE_NAME = 'exp-er-v3-local'; // เปลี่ยนชื่อเวอร์ชั่นเพื่อบังคับอัปเดต
+const CACHE_NAME = 'exp-er-v5-local'; // อัปเดตเวอร์ชัน
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
