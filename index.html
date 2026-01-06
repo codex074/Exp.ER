@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Exp ER</title>
+
+  <!-- PWA Settings -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#e11d48">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Exp.ER">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3063/3063822.png">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#e11d48', // Rose-600
+            'primary-hover': '#be123c', // Rose-700
+            'primary-light': '#fff1f2', // Rose-50
+            secondary: '#f43f5e', // Rose-500
+          },
+          fontFamily: {
+            sans: ['Sarabun', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 10px;
+    }
+
+    /* Animations */
+    .fade-in {
+      animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes float {
+      0% {
+        transform: translate(0px, 0px) scale(1);
+      }
+
+      33% {
+        transform: translate(30px, -50px) scale(1.1);
+      }
+
+      66% {
+        transform: translate(-20px, 20px) scale(0.9);
+      }
+
+      100% {
+        transform: translate(0px, 0px) scale(1);
+      }
+    }
+
+    .animate-blob {
+      animation: float 7s infinite;
+    }
+
+    .animation-delay-2000 {
+      animation-delay: 2s;
+    }
+
+    .animation-delay-4000 {
+      animation-delay: 4s;
+    }
+
+    /* Action Cards */
+    .action-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      border-radius: 1rem;
+      height: 100%;
+      background-color: #fff1f2;
+      color: #334155;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .action-card:hover {
+      background-color: #e11d48;
+      box-shadow: 0 0 0 5px rgba(225, 29, 72, 0.3);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    .action-card-input:checked+.action-card {
+      background-color: #e11d48;
+      box-shadow: 0 0 0 5px rgba(225, 29, 72, 0.3);
+      color: #fff;
+      transform: scale(1.02);
+    }
+
+    .action-card:hover i,
+    .action-card:hover span,
+    .action-card-input:checked+.action-card i,
+    .action-card-input:checked+.action-card span {
+      color: white !important;
+      transition: color 0.3s ease;
+    }
+
+    /* Loaders & UI Elements */
+    .modal-bg {
+      background-color: rgba(15, 23, 42, 0.3);
+      backdrop-filter: blur(8px);
+    }
+
+    .custom-loader {
+      width: 50px;
+      height: 50px;
+      display: grid;
+    }
+
+    .custom-loader::before,
+    .custom-loader::after {
+      content: "";
+      grid-area: 1/1;
+      --c: radial-gradient(farthest-side, #e11d48 92%, #0000);
+      background: var(--c) 50% 0, var(--c) 50% 100%, var(--c) 100% 50%, var(--c) 0 50%;
+      background-size: 12px 12px;
+      background-repeat: no-repeat;
+      animation: s2 1s infinite;
+    }
+
+    .custom-loader::before {
+      margin: 4px;
+      filter: hue-rotate(45deg);
+      background-size: 8px 8px;
+      animation-timing-function: linear;
+    }
+
+    @keyframes s2 {
+      100% {
+        transform: rotate(.5turn)
+      }
+    }
+
+    /* Buttons */
+    .btn-donate {
+      cursor: pointer;
+      padding: 0.9em 1.4em;
+      min-width: 120px;
+      min-height: 55px;
+      font-weight: 700;
+      transition: 0.8s;
+      background-size: 280% auto;
+      background-image: linear-gradient(325deg, #f43f5e 0%, #e11d48 55%, #f43f5e 90%);
+      border: none;
+      border-radius: 1rem;
+      color: white;
+      box-shadow: 0px 0px 20px rgba(225, 29, 72, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn-donate:hover {
+      background-position: right top;
+    }
+
+    /* Nav Button Active States - Customized Colors */
+    .tab-button {
+      transition: all 0.3s ease;
+    }
+
+    /* Default Inactive State */
+    .tab-button:not(.active) {
+      background-color: rgba(255, 255, 255, 0.15);
+      color: #fff1f2;
+    }
+
+    .tab-button:not(.active):hover {
+      background-color: rgba(255, 255, 255, 0.25);
+    }
+
+    /* Active States by ID */
+    #tab-entry.active {
+      background-color: #3b82f6;
+      /* Blue-500 */
+      color: white;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    #tab-report.active {
+      background-color: #f59e0b;
+      /* Amber-500 */
+      color: white;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .bin-button {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 55px;
+      height: 55px;
+      border-radius: 15px;
+      background-color: rgb(255, 95, 95);
+      cursor: pointer;
+      border: 3px solid rgb(255, 201, 201);
+      transition-duration: 0.3s;
+      box-shadow: 0 4px 6px rgba(255, 95, 95, 0.3);
+    }
+
+    .bin-button:hover .bin-top {
+      transform: rotate(45deg);
+    }
+
+    .bin-top {
+      width: 17px;
+      transform-origin: right;
+      transition-duration: 0.3s;
+    }
+
+    .bin-bottom {
+      width: 15px;
+    }
+  </style>
+</head>
+
+<body
+  class="bg-slate-50 relative h-screen w-screen text-slate-800 overflow-hidden selection:bg-rose-100 selection:text-rose-600">
+
+  <!-- Background Blobs -->
+  <div
+    class="fixed top-[-10%] left-[-10%] w-[500px] h-[500px] bg-rose-300/40 rounded-full mix-blend-multiply filter blur-[100px] animate-blob z-0 pointer-events-none">
+  </div>
+  <div
+    class="fixed top-[10%] right-[-10%] w-[400px] h-[400px] bg-orange-300/40 rounded-full mix-blend-multiply filter blur-[100px] animate-blob animation-delay-2000 z-0 pointer-events-none">
+  </div>
+  <div
+    class="fixed bottom-[-10%] left-[20%] w-[450px] h-[450px] bg-red-300/40 rounded-full mix-blend-multiply filter blur-[100px] animate-blob animation-delay-4000 z-0 pointer-events-none">
+  </div>
+
+  <!-- Main Container -->
+  <div
+    class="relative z-10 w-full h-full md:h-[95vh] md:my-[2.5vh] md:w-[98%] md:mx-auto bg-white/70 backdrop-blur-2xl rounded-none md:rounded-[2.5rem] md:shadow-2xl md:border md:border-white/60 flex flex-col transition-all duration-300 overflow-hidden ring-1 ring-white/50">
+
+    <!-- Header -->
+    <div
+      class="bg-gradient-to-br from-rose-600 via-red-600 to-orange-700 px-6 py-4 md:rounded-t-[2.5rem] shadow-lg shadow-rose-500/20 text-white shrink-0 z-30 flex flex-col md:flex-row justify-between items-center gap-4 relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+
+      <div class="relative z-10 flex items-center gap-4 w-full md:w-auto">
+        <div class="bg-white/20 p-2 rounded-2xl backdrop-blur-md border border-white/20 shadow-inner flex-shrink-0">
+          <i class="fa-solid fa-file-medical text-3xl text-white"></i>
+        </div>
+        <div class="flex flex-col justify-center">
+          <div class="flex items-center gap-3">
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight leading-none text-white drop-shadow-sm">ER
+              Pharmacy</h1>
+            <span
+              class="bg-red-700 text-white text-[10px] font-bold px-2 py-0.5 rounded border border-red-500 shadow-sm tracking-wider">ER
+              SYSTEM</span>
+          </div>
+          <p class="text-rose-100 text-sm md:text-base opacity-90 font-medium tracking-wide mt-0.5">Expiry Management
+            System</p>
+        </div>
+      </div>
+
+      <div class="relative z-10 flex items-center gap-2 w-full md:w-auto justify-end">
+        <!-- Google Sheet Button (Green) -->
+        <a href="https://docs.google.com/spreadsheets/d/1-K36cIiTAbxQE3Pocr5O0x5_ymNFMBQrJl_uTZ8bBcE/edit?gid=0#gid=0"
+          target="_blank"
+          class="h-11 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 border border-emerald-500 shadow-sm shadow-emerald-900/20">
+          <i class="fa-solid fa-table"></i> Google Sheet
+        </a>
+
+        <button onclick="switchTab('entry')" id="tab-entry"
+          class="tab-button active w-40 h-11 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap">
+          <i class="fa-solid fa-plus"></i> Add Item
+        </button>
+        <button onclick="switchTab('report')" id="tab-report"
+          class="tab-button w-40 h-11 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap">
+          <i class="fa-solid fa-list-ul"></i> Manage Item
+        </button>
+      </div>
+    </div>
+
+    <!-- Content Area -->
+    <div id="mainContainer"
+      class="flex-1 px-4 md:px-6 pb-32 overflow-y-auto overflow-x-hidden relative scroll-smooth pt-6">
+
+      <!-- View: Entry -->
+      <div id="view-entry" class="fade-in w-full">
+        <form id="expiryForm" onsubmit="handleFormSubmit(event)" class="space-y-6 w-full">
+          <input type="hidden" id="generic" name="generic"><input type="hidden" id="unit" name="unit"><input
+            type="hidden" id="strength" name="strength">
+
+          <!-- Row 1 -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div class="group">
+              <label class="block text-xs font-bold text-slate-400 uppercase mb-2 tracking-wider ml-1">Transaction
+                Date</label>
+              <input type="date" id="entryDate" name="entryDate"
+                class="w-full h-12 px-4 rounded-2xl bg-white/80 border border-slate-200 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all font-semibold text-lg text-slate-700 shadow-sm"
+                required>
+            </div>
+
+            <div class="relative group lg:col-span-1">
+              <label class="block text-xs font-bold text-slate-400 uppercase mb-2 tracking-wider ml-1">Drug Name</label>
+              <div class="flex gap-2">
+                <div class="relative flex-1">
+                  <i
+                    class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-slate-400 z-10 group-focus-within:text-rose-500 transition-colors text-lg"></i>
+                  <input type="text" id="drugSearch" placeholder="Load Data first..."
+                    class="w-full h-12 pl-11 pr-10 px-4 rounded-2xl bg-white/80 border border-slate-200 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all font-semibold text-lg shadow-sm disabled:bg-slate-50 disabled:text-slate-400"
+                    autocomplete="off" required disabled>
+                  <button type="button" id="clearSearchBtn" onclick="clearDrugSearch()"
+                    class="absolute right-3 top-2.5 text-slate-400 hover:text-red-500 hidden z-20 w-8 h-8 rounded-full hover:bg-slate-100 transition flex items-center justify-center"><i
+                      class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+                <button type="button" onclick="refreshData()" id="btnRefresh"
+                  class="w-12 h-12 rounded-2xl bg-white border border-slate-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300 shadow-sm flex items-center justify-center transition-all active:scale-95"
+                  title="Load Data"><i class="fa-solid fa-arrows-rotate text-xl" id="iconRefresh"></i></button>
+              </div>
+              <ul id="drugList"
+                class="hidden absolute z-30 w-full bg-white/90 backdrop-blur-xl border border-slate-100 rounded-2xl shadow-xl max-h-60 overflow-y-auto mt-2 overflow-hidden text-base divide-y divide-slate-50">
+              </ul>
+            </div>
+
+            <div class="group">
+              <label class="block text-xs font-bold text-slate-400 uppercase mb-2 tracking-wider ml-1">Expiry
+                Date</label>
+              <input type="date" id="expiryDateInput" name="expiryDate"
+                class="w-full h-12 px-4 rounded-2xl bg-red-50/50 border border-red-100 focus:border-red-400 focus:ring-4 focus:ring-red-400/10 outline-none text-red-600 font-bold text-xl shadow-sm transition-all"
+                required>
+            </div>
+
+            <div class="group">
+              <label class="block text-xs font-bold text-slate-400 uppercase mb-2 tracking-wider ml-1">Quantity</label>
+              <div class="flex items-center gap-2">
+                <button type="button" onclick="adjustQty(-1)"
+                  class="w-12 h-12 rounded-xl border-2 border-slate-200 flex items-center justify-center bg-white active:scale-95"><i
+                    class="fa-solid fa-minus text-slate-400"></i></button>
+                <input type="number" id="qtyInput"
+                  class="flex-1 min-w-0 h-12 text-center rounded-2xl bg-white border-2 border-slate-200 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 outline-none font-bold text-2xl text-slate-700 shadow-sm"
+                  placeholder="0" required>
+                <button type="button" onclick="adjustQty(1)"
+                  class="w-12 h-12 rounded-xl border-2 border-slate-200 flex items-center justify-center bg-white active:scale-95"><i
+                    class="fa-solid fa-plus text-slate-400"></i></button>
+                <span id="unitDisplay"
+                  class="h-12 px-3 rounded-2xl bg-slate-100 text-slate-500 font-bold border border-slate-200 flex items-center justify-center shadow-sm text-sm tracking-wider min-w-[60px] uppercase">UNIT</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Types -->
+          <div>
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-3 tracking-wider ml-1">Management Action
+              <span class="text-red-500">*</span></label>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+              <label class="cursor-pointer relative group"><input type="radio" name="actionType" value="Sticker"
+                  class="action-card-input hidden" required onchange="toggleSubDetails(this.value)">
+                <div class="action-card"><i class="fa-solid fa-tags text-2xl text-orange-500"></i><span
+                    class="text-sm font-bold text-slate-600">ติด Sticker</span></div>
+              </label>
+              <label class="cursor-pointer relative group"><input type="radio" name="actionType" value="Transfer"
+                  class="action-card-input hidden" onchange="toggleSubDetails(this.value)">
+                <div class="action-card"><i class="fa-solid fa-share-from-square text-2xl text-rose-500"></i><span
+                    class="text-sm font-bold text-slate-600">ส่งต่อ</span></div>
+              </label>
+              <label class="cursor-pointer relative group"><input type="radio" name="actionType" value="Separate"
+                  class="action-card-input hidden" onchange="toggleSubDetails(this.value)">
+                <div class="action-card"><i class="fa-solid fa-box-open text-2xl text-red-500"></i><span
+                    class="text-sm font-bold text-slate-600">แยกเก็บ</span></div>
+              </label>
+              <label class="cursor-pointer relative group"><input type="radio" name="actionType" value="ContactWH"
+                  class="action-card-input hidden" onchange="toggleSubDetails(this.value)">
+                <div class="action-card"><i class="fa-solid fa-phone-volume text-2xl text-teal-500"></i><span
+                    class="text-sm font-bold text-slate-600">ติดต่อคลัง</span></div>
+              </label>
+              <label class="cursor-pointer relative group"><input type="radio" name="actionType" value="ReturnWH"
+                  class="action-card-input hidden" onchange="toggleSubDetails(this.value)">
+                <div class="action-card"><i class="fa-solid fa-truck-ramp-box text-2xl text-green-500"></i><span
+                    class="text-sm font-bold text-slate-600">คืนคลัง</span></div>
+              </label>
+              <label class="cursor-pointer relative group"><input type="radio" name="actionType" value="Destroy"
+                  class="action-card-input hidden" onchange="toggleSubDetails(this.value)">
+                <div class="action-card"><i class="fa-solid fa-fire text-2xl text-red-600"></i><span
+                    class="text-sm font-bold text-slate-600">ทำลาย</span></div>
+              </label>
+              <label class="cursor-pointer relative group"><input type="radio" name="actionType" value="Other"
+                  class="action-card-input hidden" onchange="toggleSubDetails(this.value)">
+                <div class="action-card"><i class="fa-solid fa-ellipsis text-2xl text-gray-500"></i><span
+                    class="text-sm font-bold text-slate-600">อื่นๆ</span></div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Dynamic Details -->
+          <div id="dynamicArea"
+            class="p-5 bg-slate-50/80 backdrop-blur-sm rounded-3xl border border-slate-200 hidden fade-in">
+            <label class="block text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider">Additional
+              Details</label>
+            <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-3">
+              <select id="inputTransfer"
+                class="hidden w-full md:w-1/3 p-3 rounded-xl bg-slate-50 border border-slate-100 outline-none focus:border-rose-400 focus:bg-white text-base">
+                <option value="" disabled selected>-- เลือกปลายทาง --</option>
+                <option value="OPD">OPD</option>
+                <option value="OPD Surg">OPD Surg</option>
+                <option value="IPD MED">IPD MED</option>
+                <option value="IPD Surg">IPD Surg</option>
+                <option value="จิตเวช&เด็ก">จิตเวช&เด็ก</option>
+                <option value="Napha">Napha</option>
+              </select>
+              <div class="flex-1"><textarea id="subNote" placeholder="Note (Optional)..."
+                  class="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-rose-400 focus:ring-4 focus:ring-rose-500/10 outline-none transition-all text-base"
+                  rows="1"></textarea></div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-donate w-full mt-6 text-lg group"><i
+              class="fa-solid fa-save group-hover:scale-110 transition-transform"></i> Save Data</button>
+        </form>
+      </div>
+
+      <!-- View: Report -->
+      <div id="view-report" class="hidden fade-in w-full">
+        <div
+          class="sticky top-0 bg-white/80 backdrop-blur-md p-4 -mx-4 z-20 rounded-b-3xl border-b border-slate-100/50 shadow-sm mb-4">
+          <div class="flex flex-col lg:flex-row gap-4 items-end lg:items-center">
+            <div class="flex-1 w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="text-xs font-bold text-slate-400 uppercase ml-1 mb-1 block">Timeframe</label>
+                <select id="filterTime" onchange="renderReport()"
+                  class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none focus:border-rose-400">
+                  <option value="all">All Time</option>
+                  <option value="30">Next 30 Days</option>
+                  <option value="90">Next 3 Months</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs font-bold text-slate-400 uppercase ml-1 mb-1 block">Action Type</label>
+                <select id="filterAction" onchange="renderReport()"
+                  class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none focus:border-rose-400">
+                  <option value="all">All Types</option>
+                  <option value="Sticker">ติด Sticker</option>
+                  <option value="Transfer">ส่งต่อ</option>
+                  <option value="Separate">แยกเก็บ</option>
+                  <option value="ContactWH">ติดต่อคลัง</option>
+                  <option value="ReturnWH">คืนคลัง</option>
+                  <option value="Destroy">ทำลาย</option>
+                </select>
+              </div>
+            </div>
+            <button onclick="forceRefreshReport()" id="btnReportRefresh"
+              class="w-full lg:w-auto px-6 py-2.5 rounded-xl bg-rose-50 border border-rose-100 text-rose-600 font-bold text-sm hover:bg-rose-100 hover:text-rose-700 flex items-center justify-center gap-2"><i
+                class="fa-solid fa-arrows-rotate"></i> Refresh</button>
+          </div>
+        </div>
+        <div id="reportList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 pb-24 min-h-[300px]"></div>
+        <!-- Pagination -->
+        <div id="paginationControls" class="flex justify-between items-center pt-4 pb-24 hidden">
+          <button onclick="prevPage()" id="btnPrev"
+            class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 font-bold disabled:opacity-50">Previous</button>
+          <span id="pageIndicator" class="text-sm font-bold text-slate-400">Page 1</span>
+          <button onclick="nextPage()" id="btnNext"
+            class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 font-bold disabled:opacity-50">Next</button>
+        </div>
+      </div>
+
+    </div> <!-- End Content -->
+
+    <!-- Manage Modal -->
+    <div id="manageModal" class="fixed inset-0 z-50 hidden flex items-center justify-center modal-bg p-4">
+      <div
+        class="bg-white rounded-[2rem] shadow-2xl w-full max-w-md md:max-w-lg h-[85vh] flex flex-col overflow-hidden">
+        <div
+          class="bg-gradient-to-r from-rose-600 via-red-600 to-orange-600 p-6 text-white flex justify-between items-center shrink-0">
+          <div>
+            <h3 class="font-medium text-rose-200 text-xs uppercase tracking-wider mb-1"><i
+                class="fa-solid fa-pen-to-square"></i> Manage Item</h3>
+            <p class="text-xl font-bold text-white leading-tight drop-shadow-sm" id="manageDrugName">Drug Name</p>
+          </div>
+          <button onclick="closeManageModal()"
+            class="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center hover:bg-red-600 text-white shadow-lg"><i
+              class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+
+        <div class="p-6 overflow-y-auto flex-1 space-y-6 bg-slate-50/50">
+          <input type="hidden" id="manageRowIndex"><input type="hidden" id="manageMaxQty"><input type="hidden"
+            id="manageOriginalAction">
+
+          <!-- Qty Control -->
+          <div class="bg-white p-5 rounded-3xl border border-slate-100 text-center relative shadow-sm">
+            <div class="flex items-center justify-center gap-4 mb-2">
+              <button onclick="adjustManageQty(-1)"
+                class="w-12 h-12 rounded-full border border-slate-200 text-slate-400 hover:border-rose-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center"><i
+                  class="fa-solid fa-minus"></i></button>
+              <div class="flex-1 max-w-[100px] border-b-2 border-rose-200"><input type="number" id="manageQty"
+                  class="w-full outline-none text-center text-3xl font-bold text-rose-600 bg-transparent"
+                  placeholder="0"></div>
+              <button onclick="adjustManageQty(1)"
+                class="w-12 h-12 rounded-full border border-slate-200 text-slate-400 hover:border-rose-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center"><i
+                  class="fa-solid fa-plus"></i></button>
+              <button onclick="setAllQty()"
+                class="w-12 h-12 rounded-full border-2 border-rose-100 text-rose-500 bg-white hover:bg-rose-50 text-[10px] font-bold shadow-sm">ALL</button>
+            </div>
+            <div class="text-xs text-slate-500 mt-2">Current Stock: <span id="displayMaxQty"
+                class="font-bold text-slate-800 text-base">0</span> <span id="manageUnit"
+                class="text-[10px] font-bold text-rose-500 uppercase">UNIT</span> <button onclick="editStockQty()"
+                class="text-rose-400 ml-2"><i class="fa-solid fa-pen-to-square"></i></button></div>
+          </div>
+
+          <!-- Wrapper for Radio Inputs -->
+          <div>
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-3">New Status</label>
+            <div class="grid grid-cols-3 gap-3">
+              <label class="cursor-pointer group"><input type="radio" name="manageAction" value="Sticker"
+                  class="action-card-input hidden" onchange="modalToggleSubDetails(this.value)">
+                <div class="action-card"><i class="fa-solid fa-tags text-2xl text-orange-500"></i><span
+                    class="text-xs font-bold">Sticker</span></div>
+              </label>
+              <label class="cursor-pointer group"><input type="radio" name="manageAction" value="Transfer"
+                  class="action-card-input hidden" onchange="modalToggleSubDetails(this.value)">
+                <div class="action-card"><i class="fa-solid fa-share-from-square text-2xl text-rose-500"></i><span
+                    class="text-xs font-bold">ส่งต่อ</span></div>
+              </label>
+              <label class="cursor-pointer group"><input type="radio" name="manageAction" value="Separate"
+                  class="action-card-input hidden" onchange="modalToggleSubDetails(this.value)">
+                <div class="action-card"><i class="fa-solid fa-box-open text-2xl text-red-500"></i><span
+                    class="text-xs font-bold">แยกเก็บ</span></div>
+              </label>
+              <label class="cursor-pointer group"><input type="radio" name="manageAction" value="ContactWH"
+                  class="action-card-input hidden" onchange="modalToggleSubDetails(this.value)">
+                <div class="action-card"><i class="fa-solid fa-phone-volume text-2xl text-teal-500"></i><span
+                    class="text-xs font-bold">แจ้งคลัง</span></div>
+              </label>
+              <label class="cursor-pointer group"><input type="radio" name="manageAction" value="ReturnWH"
+                  class="action-card-input hidden" onchange="modalToggleSubDetails(this.value)">
+                <div class="action-card"><i class="fa-solid fa-truck-ramp-box text-2xl text-green-500"></i><span
+                    class="text-xs font-bold">คืนคลัง</span></div>
+              </label>
+              <label class="cursor-pointer group"><input type="radio" name="manageAction" value="Destroy"
+                  class="action-card-input hidden" onchange="modalToggleSubDetails(this.value)">
+                <div class="action-card"><i class="fa-solid fa-fire text-2xl text-red-600"></i><span
+                    class="text-xs font-bold">ทำลาย</span></div>
+              </label>
+              <label class="cursor-pointer group"><input type="radio" name="manageAction" value="Other"
+                  class="action-card-input hidden" onchange="modalToggleSubDetails(this.value)">
+                <div class="action-card"><i class="fa-solid fa-ellipsis text-2xl text-gray-500"></i><span
+                    class="text-xs font-bold">อื่นๆ</span></div>
+              </label>
+            </div>
+          </div>
+
+          <div id="modalDynamicArea" class="hidden space-y-3">
+            <select id="modalTransfer"
+              class="w-full p-3 rounded-xl bg-white border border-slate-200 outline-none focus:border-rose-400">
+              <option value="" disabled selected>-- เลือกปลายทาง --</option>
+              <option value="OPD">OPD</option>
+              <option value="OPD Surg">OPD Surg</option>
+              <option value="IPD MED">IPD MED</option>
+              <option value="IPD Surg">IPD Surg</option>
+              <option value="จิตเวช&เด็ก">จิตเวช&เด็ก</option>
+              <option value="Napha">Napha</option>
+            </select>
+            <textarea id="modalSubNote" placeholder="Note..."
+              class="w-full p-3 rounded-xl border border-slate-200 bg-white focus:border-rose-400 outline-none"
+              rows="2"></textarea>
+          </div>
+        </div>
+
+        <div class="p-6 border-t border-slate-100 bg-white flex gap-4">
+          <button onclick="confirmDelete()" class="bin-button"><i
+              class="fa-solid fa-trash text-white text-xl"></i></button>
+          <button onclick="submitManagement()" class="btn-donate flex-1 group">Confirm Update <i
+              class="fa-solid fa-floppy-disk ml-2"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="overlay"
+      class="fixed inset-0 bg-slate-900/60 z-[60] hidden flex items-center justify-center backdrop-blur-sm fade-in">
+      <div class="bg-white p-8 rounded-[2rem] shadow-2xl flex flex-col items-center w-80">
+        <div class="custom-loader mb-4"></div>
+        <h2 class="text-slate-800 font-bold text-xl">Processing...</h2>
+      </div>
+    </div>
+
+  </div> <!-- End Main Wrapper -->
+
+  <script>
+    // **********************************************
+    // CONFIGURATION - PASTE YOUR GAS WEB APP URL HERE
+    // **********************************************
+    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzO33xvwfUGW3Izfcpvc0JH9Ox1DArHM_I5zd3PzSxgcI1NNYuT-Hpw1Pdeb1ysM5N1/exec';
+
+    // --- Utils for Fetch API ---
+    async function runGoogle(action, payload = {}) {
+      if (GAS_API_URL.includes('PASTE_YOUR')) {
+        Swal.fire('Config Error', 'Please paste your Google Apps Script Web App URL in the code.', 'error');
+        throw new Error("Missing API URL");
+      }
+
+      // Convert payload to match POST body structure
+      const body = { action: action, payload: payload };
+
+      const response = await fetch(GAS_API_URL, {
+        method: 'POST',
+        redirect: "follow", // Important for GAS
+        body: JSON.stringify(body),
+        headers: { "Content-Type": "text/plain;charset=utf-8" }
+      });
+
+      const json = await response.json();
+      if (json.error || (json.success === false)) {
+        throw new Error(json.message || json.error || "Unknown Error");
+      }
+      return json;
+    }
+
+    // --- State ---
+    let drugDatabase = [];
+    let reportData = [];
+    let filteredReportData = [];
+    let currentPage = 1;
+    let isReportLoaded = false; // Flag to track if report data has been loaded
+
+    // --- On Load ---
+    window.onload = function () {
+      document.getElementById('entryDate').value = new Date().toISOString().split('T')[0];
+      // Only try to load if URL is set
+      if (!GAS_API_URL.includes('PASTE_YOUR')) refreshData();
+    };
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + tab).classList.add('active');
+      document.getElementById('view-entry').classList.toggle('hidden', tab !== 'entry');
+      document.getElementById('view-report').classList.toggle('hidden', tab !== 'report');
+
+      // Only load report if it hasn't been loaded yet
+      if (tab === 'report' && !isReportLoaded) {
+        loadReport();
+        isReportLoaded = true;
+      }
+    }
+
+    // Force refresh button action
+    function forceRefreshReport() {
+      // Reset the flag so we can reload
+      isReportLoaded = false;
+
+      const btn = document.getElementById('btnReportRefresh');
+      const icon = btn.querySelector('i');
+
+      icon.classList.add('fa-spin');
+      btn.disabled = true;
+
+      loadReport().then(() => {
+        isReportLoaded = true; // Mark as loaded after success
+        icon.classList.remove('fa-spin');
+        btn.disabled = false;
+        Swal.fire({
+          icon: 'success',
+          title: 'Refreshed',
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 1500
+        });
+      }).catch(() => {
+        icon.classList.remove('fa-spin');
+        btn.disabled = false;
+      });
+    }
+
+    // --- Data Fetching ---
+    function refreshData() {
+      const btn = document.getElementById('btnRefresh');
+      const icon = document.getElementById('iconRefresh');
+      const searchInput = document.getElementById('drugSearch');
+      icon.classList.add('fa-spin');
+      searchInput.placeholder = "Loading..."; searchInput.disabled = true;
+
+      // For fetch, we can use the GET endpoint for simple reads if desired, 
+      // but to keep logic simple with our doPost/doGet hybrid, we can use runGoogle (POST)
+      // Actually, for getDrugList, let's use GET to be standard
+      fetch(`${GAS_API_URL}?action=getDrugList`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) throw new Error(data.error);
+          drugDatabase = data;
+          icon.classList.remove('fa-spin');
+          searchInput.disabled = false; searchInput.value = ""; searchInput.placeholder = "🔍 Search Drug...";
+        })
+        .catch(err => {
+          icon.classList.remove('fa-spin');
+          searchInput.placeholder = "Error";
+          Swal.fire('Error', 'Failed to load list. Check URL.', 'error');
+        });
+    }
+
+    // --- Search ---
+    document.getElementById('drugSearch').addEventListener('input', function () {
+      const val = this.value.toLowerCase().trim();
+      const list = document.getElementById('drugList');
+      document.getElementById('clearSearchBtn').classList.toggle('hidden', !val);
+
+      list.innerHTML = '';
+      if (!val) { list.classList.add('hidden'); return; }
+
+      const matches = drugDatabase.filter(d => d.displayName.toLowerCase().includes(val)).slice(0, 10);
+      if (matches.length > 0) {
+        list.classList.remove('hidden');
+        matches.forEach(item => {
+          const li = document.createElement('li');
+          li.className = "p-4 hover:bg-rose-50 cursor-pointer border-b border-slate-100 flex items-center gap-2 text-slate-700";
+          li.innerHTML = `<i class="fa-solid fa-pills text-rose-300"></i> ${item.displayName}`;
+          li.onclick = () => selectDrug(item);
+          list.appendChild(li);
+        });
+      } else { list.classList.add('hidden'); }
+    });
+
+    function selectDrug(item) {
+      document.getElementById('drugSearch').value = item.displayName;
+      document.getElementById('generic').value = item.generic;
+      document.getElementById('strength').value = item.strength;
+      document.getElementById('unit').value = item.unit;
+      document.getElementById('unitDisplay').textContent = item.unit || 'UNIT';
+      document.getElementById('drugList').classList.add('hidden');
+    }
+
+    function clearDrugSearch() {
+      document.getElementById('drugSearch').value = '';
+      document.getElementById('drugList').classList.add('hidden');
+      document.getElementById('clearSearchBtn').classList.add('hidden');
+    }
+
+    function adjustQty(n) {
+      const el = document.getElementById('qtyInput');
+      let v = parseInt(el.value) || 0;
+      el.value = Math.max(0, v + n);
+    }
+
+    function toggleSubDetails(action) {
+      const div = document.getElementById('dynamicArea');
+      const trans = document.getElementById('inputTransfer');
+      const note = document.getElementById('subNote');
+
+      div.classList.remove('hidden');
+      trans.classList.toggle('hidden', action !== 'Transfer');
+      trans.required = (action === 'Transfer');
+
+      const requiredNote = ['Other', 'ContactWH', 'ReturnWH', 'Destroy'].includes(action);
+      note.placeholder = requiredNote ? "Note (Required)..." : "Note (Optional)...";
+      note.classList.toggle('border-rose-300', requiredNote);
+    }
+
+    // --- Submit ---
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const action = document.querySelector('input[name="actionType"]:checked').value;
+      const note = document.getElementById('subNote').value.trim();
+      if (['Other', 'ContactWH', 'ReturnWH', 'Destroy'].includes(action) && !note) {
+        Swal.fire('Missing Note', 'Please add a note.', 'warning'); return;
+      }
+
+      Swal.fire({
+        title: 'Save Entry?', icon: 'question', showCancelButton: true, confirmButtonText: 'Yes, Save', confirmButtonColor: '#e11d48'
+      }).then(res => {
+        if (res.isConfirmed) submitData();
+      });
+    }
+
+    function submitData() {
+      document.getElementById('overlay').classList.remove('hidden');
+      const formData = {
+        drugName: document.getElementById('drugSearch').value,
+        generic: document.getElementById('generic').value,
+        strength: document.getElementById('strength').value,
+        unit: document.getElementById('unit').value,
+        qty: document.getElementById('qtyInput').value,
+        expiryDate: document.getElementById('expiryDateInput').value,
+        actionType: document.querySelector('input[name="actionType"]:checked').value,
+        subDetails: document.getElementById('inputTransfer').value,
+        notes: document.getElementById('subNote').value
+      };
+
+      runGoogle('saveData', formData).then(res => {
+        document.getElementById('overlay').classList.add('hidden');
+        Swal.fire({ icon: 'success', title: 'Saved!', timer: 1500, showConfirmButton: false });
+        document.getElementById('expiryForm').reset();
+        document.getElementById('dynamicArea').classList.add('hidden');
+        clearDrugSearch();
+
+        // Optionally mark report as stale so it reloads next time user visits report tab
+        // isReportLoaded = false; 
+      }).catch(err => {
+        document.getElementById('overlay').classList.add('hidden');
+        Swal.fire('Error', err.message || 'Error', 'error');
+      });
+    }
+
+    // --- Report ---
+    function loadReport() {
+      document.getElementById('reportList').innerHTML = '<div class="col-span-full text-center p-10">Loading...</div>';
+      // Use GET for reading report data as well
+      return fetch(`${GAS_API_URL}?action=getReportData`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) throw new Error(data.error);
+          reportData = data;
+          renderReport();
+        })
+        .catch(err => {
+          document.getElementById('reportList').innerHTML = '<div class="col-span-full text-center text-red-500">Error Loading Data</div>';
+          throw err; // Propagate error for callers like forceRefreshReport
+        });
+    }
+
+    function renderReport() {
+      const list = document.getElementById('reportList');
+      const filterTime = document.getElementById('filterTime').value;
+      const filterAction = document.getElementById('filterAction').value;
+
+      list.innerHTML = '';
+      if (!reportData.length) { list.innerHTML = '<div class="col-span-full text-center text-slate-400">No Data</div>'; return; }
+
+      const today = new Date();
+      const processed = reportData.map(r => {
+        const diff = Math.ceil((new Date(r.expiryDate) - today) / (1000 * 60 * 60 * 24));
+        return { ...r, diff };
+      }).sort((a, b) => a.diff - b.diff);
+
+      filteredReportData = processed.filter(r => {
+        let timeMatch = true;
+        if (filterTime !== 'all') timeMatch = r.diff <= parseInt(filterTime) && r.diff >= -365;
+        let actionMatch = (filterAction === 'all') || (r.action === filterAction);
+        return timeMatch && actionMatch;
+      });
+
+      currentPage = 1;
+      renderPage();
+    }
+
+    function renderPage() {
+      const list = document.getElementById('reportList');
+      const itemsPerPage = 9;
+      const start = (currentPage - 1) * itemsPerPage;
+      const pageItems = filteredReportData.slice(start, start + itemsPerPage);
+
+      document.getElementById('paginationControls').classList.toggle('hidden', filteredReportData.length <= itemsPerPage);
+      document.getElementById('pageIndicator').innerText = `Page ${currentPage}`;
+      document.getElementById('btnPrev').disabled = currentPage === 1;
+      document.getElementById('btnNext').disabled = start + itemsPerPage >= filteredReportData.length;
+
+      list.innerHTML = pageItems.map(item => {
+        const styleMap = {
+          'Sticker': { color: 'text-orange-600', bg: 'bg-orange-50', label: 'ติดสติกเกอร์' },
+          'Transfer': { color: 'text-rose-600', bg: 'bg-rose-50', label: 'ส่งต่อ' },
+          'Separate': { color: 'text-red-600', bg: 'bg-red-50', label: 'แยกเก็บ' },
+          'ContactWH': { color: 'text-teal-600', bg: 'bg-teal-50', label: 'ติดต่อคลัง' },
+          'ReturnWH': { color: 'text-green-600', bg: 'bg-green-50', label: 'คืนคลัง' },
+          'Destroy': { color: 'text-red-800', bg: 'bg-red-100', label: 'ทำลาย' },
+          'Other': { color: 'text-slate-600', bg: 'bg-slate-50', label: 'อื่นๆ' }
+        };
+        const s = styleMap[item.action] || styleMap['Other'];
+
+        let actionDisplay = s.label;
+        if (item.action === 'Transfer' && item.subDetails) {
+          actionDisplay += ` <i class="fa-solid fa-arrow-right text-[10px] mx-1"></i> ${item.subDetails}`;
+        }
+
+        const dateStr = new Date(item.expiryDate).toLocaleDateString('th-TH');
+        const noteText = item.notes ? item.notes : "-";
+
+        return `
+               <div onclick='openManage(${JSON.stringify(item)})' class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 hover:shadow-lg cursor-pointer transition-all border-l-4 ${item.diff < 30 ? 'border-l-red-500' : (item.diff < 90 ? 'border-l-orange-400' : 'border-l-green-500')}">
+                  <div class="flex justify-between mb-2">
+                     <span class="px-2 py-1 rounded-md text-xs font-bold ${s.bg} ${s.color} flex items-center">${actionDisplay}</span>
+                     <span class="text-xs font-bold ${item.diff < 0 ? 'text-slate-400' : (item.diff < 30 ? 'text-red-600' : 'text-green-600')}">${item.diff} Days</span>
+                  </div>
+                  <h3 class="font-bold text-slate-800 text-lg truncate">${item.drugName}</h3>
+                  <div class="text-sm text-slate-500 mb-2">${item.strength || '-'}</div>
+                  <div class="flex justify-between text-sm bg-slate-50 p-2 rounded-lg mb-2">
+                     <span>Qty: <b>${item.qty}</b> ${item.unit}</span>
+                     <span>${dateStr}</span>
+                  </div>
+                  <div class="text-xs text-slate-400 flex items-start gap-1">
+                    <i class="fa-regular fa-comment-dots mt-0.5"></i> <span class="line-clamp-1">${noteText}</span>
+                  </div>
+               </div>
+             `;
+      }).join('');
+    }
+
+    function prevPage() { if (currentPage > 1) { currentPage--; renderPage(); } }
+    function nextPage() { currentPage++; renderPage(); }
+
+    function openManage(item) {
+      document.getElementById('manageRowIndex').value = item.rowIndex;
+      document.getElementById('manageDrugName').innerText = item.drugName;
+      document.getElementById('manageMaxQty').value = item.qty;
+      document.getElementById('displayMaxQty').innerText = item.qty;
+      document.getElementById('manageUnit').innerText = item.unit;
+      document.getElementById('manageOriginalAction').value = item.action;
+      document.getElementById('manageModal').classList.remove('hidden');
+    }
+
+    function closeManageModal() { document.getElementById('manageModal').classList.add('hidden'); }
+
+    function adjustManageQty(n) {
+      const el = document.getElementById('manageQty');
+      let v = parseInt(el.value) || 0;
+      el.value = Math.max(0, v + n);
+    }
+    function setAllQty() { document.getElementById('manageQty').value = document.getElementById('manageMaxQty').value; }
+
+    function modalToggleSubDetails(action) {
+      const pan = document.getElementById('modalDynamicArea');
+      const tran = document.getElementById('modalTransfer');
+      pan.classList.remove('hidden');
+      tran.classList.toggle('hidden', action !== 'Transfer');
+      tran.required = (action === 'Transfer');
+    }
+
+    function submitManagement() {
+      const qty = document.getElementById('manageQty').value;
+      const actionEl = document.querySelector('input[name="manageAction"]:checked');
+      const originalAction = document.getElementById('manageOriginalAction').value;
+      const action = actionEl ? actionEl.value : originalAction;
+
+      if (!qty || qty <= 0) return Swal.fire('Error', 'Invalid Qty', 'error');
+
+      Swal.fire({ title: 'Confirm Update?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Yes', confirmButtonColor: '#e11d48' })
+        .then(res => {
+          if (res.isConfirmed) {
+            document.getElementById('overlay').classList.remove('hidden');
+            closeManageModal();
+            const payload = {
+              rowIndex: document.getElementById('manageRowIndex').value,
+              manageQty: qty,
+              newAction: action,
+              newDetails: document.getElementById('modalTransfer').value,
+              newNotes: document.getElementById('modalSubNote').value
+            };
+            runGoogle('manageItem', payload).then(r => {
+              document.getElementById('overlay').classList.add('hidden');
+              // Reload report to show changes
+              loadReport().then(() => isReportLoaded = true);
+              Swal.fire('Success', r.message, 'success');
+            });
+          }
+        });
+    }
+
+    function confirmDelete() {
+      const index = document.getElementById('manageRowIndex').value;
+      Swal.fire({
+        title: 'Delete Item?', text: "Enter 1234 to confirm", input: 'text', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444'
+      }).then(res => {
+        if (res.isConfirmed && res.value === '1234') {
+          document.getElementById('overlay').classList.remove('hidden');
+          closeManageModal();
+          runGoogle('deleteItem', { rowIndex: index, note: "User Deleted" }).then(r => {
+            document.getElementById('overlay').classList.add('hidden');
+            // Reload report to show changes
+            loadReport().then(() => isReportLoaded = true);
+            Swal.fire('Deleted', '', 'success');
+          });
+        } else if (res.isConfirmed) {
+          Swal.fire('Error', 'Incorrect PIN', 'error');
+        }
+      });
+    }
+
+    function editStockQty() {
+      const index = document.getElementById('manageRowIndex').value;
+      Swal.fire({
+        title: 'Stock Adjustment', input: 'number', inputLabel: 'New Qty', showCancelButton: true
+      }).then(res => {
+        if (res.isConfirmed && res.value) {
+          document.getElementById('overlay').classList.remove('hidden');
+          runGoogle('updateStockQuantity', { rowIndex: index, newQty: res.value }).then(r => {
+            document.getElementById('overlay').classList.add('hidden');
+            // Reload report to show changes
+            loadReport().then(() => isReportLoaded = true);
+            closeManageModal();
+          });
+        }
+      });
+    }
+  </script>
+</body>
+
+</html>
