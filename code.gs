@@ -1,46 +1,61 @@
 const SPREADSHEET_ID = '1-K36cIiTAbxQE3Pocr5O0x5_ymNFMBQrJl_uTZ8bBcE';
 
 /**
- * Serves the HTML file.
+ * Handle GET requests (Read Data)
  */
 function doGet(e) {
-  return HtmlService.createTemplateFromFile('index')
-    .evaluate()
-    .setTitle('Exp ER')
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  const action = e.parameter.action;
+  let result = {};
+  
+  try {
+    if (action === 'getDrugList') {
+      result = getDrugList();
+    } else if (action === 'getReportData') {
+      result = getReportData();
+    }
+  } catch (err) {
+    result = { error: err.toString() };
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 /**
- * Central dispatcher for frontend requests.
- * @param {string} action The action to perform.
- * @param {Object} payload The data associated with the action.
- * @return {Object} The result of the action.
+ * Handle POST requests (Write Data)
  */
-function handleRequest(action, payload) {
+function doPost(e) {
+  const lock = LockService.getScriptLock();
+  lock.tryLock(10000);
+
   try {
-    switch (action) {
-      case 'getDrugList':
-        return getDrugList();
-      case 'getReportData':
-        return getReportData();
-      case 'saveData':
-        return saveData(payload);
-      case 'deleteItem':
-        return deleteItem(payload.rowIndex, payload.note);
-      case 'manageItem':
-        return manageItem(payload.rowIndex, payload.manageQty, payload.newAction, payload.newDetails, payload.newNotes);
-      case 'updateStockQuantity':
-        return updateStockQuantity(payload.rowIndex, payload.newQty);
-      default:
-        return { error: 'Unknown action: ' + action };
+    const data = JSON.parse(e.postData.contents);
+    const action = data.action;
+    const payload = data.payload;
+    let result = {};
+
+    if (action === 'saveData') {
+      result = saveData(payload);
+    } else if (action === 'deleteItem') {
+      result = deleteItem(payload.rowIndex, payload.note);
+    } else if (action === 'manageItem') {
+      result = manageItem(payload.rowIndex, payload.manageQty, payload.newAction, payload.newDetails, payload.newNotes);
+    } else if (action === 'updateStockQuantity') {
+      result = updateStockQuantity(payload.rowIndex, payload.newQty);
     }
+
+    return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+
   } catch (err) {
-    return { error: err.toString() };
+    return ContentService.createTextOutput(JSON.stringify({ success: false, message: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock();
   }
 }
 
-// --- Logic Functions ---
+// --- Logic Functions (เหมือนเดิม) ---
 
 function getDrugList() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -61,7 +76,6 @@ function logActionToSheet(ss, drugName, qty, action, details) {
     sheet = ss.insertSheet(logSheetName);
     const header = ['Timestamp', 'Drug Name', 'Quantity Managed', 'Action Type', 'Details'];
     sheet.appendRow(header);
-    sheet.getRange(1, 1, 1, header.length).setFontWeight("bold").setBackground("#f3f4f6");
   } else if (sheet.getLastRow() === 0) {
     const header = ['Timestamp', 'Drug Name', 'Quantity Managed', 'Action Type', 'Details'];
     sheet.appendRow(header);
@@ -97,7 +111,6 @@ function getReportData() {
   const lastRow = sheet.getLastRow();
   if (lastRow < 2) return [];
   
-  // Fetch columns A to J (10 columns)
   const data = sheet.getRange(2, 1, lastRow - 1, 10).getDisplayValues();
 
   return data.map((row, i) => ({
