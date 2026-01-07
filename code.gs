@@ -1,12 +1,8 @@
 const SPREADSHEET_ID = '1-K36cIiTAbxQE3Pocr5O0x5_ymNFMBQrJl_uTZ8bBcE';
 
-/**
- * Handle GET requests (Read Data)
- */
 function doGet(e) {
   const action = e.parameter.action;
   let result = {};
-  
   try {
     if (action === 'getDrugList') {
       result = getDrugList();
@@ -21,41 +17,30 @@ function doGet(e) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-/**
- * Handle POST requests (Write Data)
- */
 function doPost(e) {
-  const lock = LockService.getScriptLock();
-  lock.tryLock(10000);
-
+  const data = JSON.parse(e.postData.contents);
+  const action = data.action;
+  const payload = data.payload || {}; 
+  let result = {};
   try {
-    const data = JSON.parse(e.postData.contents);
-    const action = data.action;
-    const payload = data.payload;
-    let result = {};
-
     if (action === 'saveData') {
       result = saveData(payload);
     } else if (action === 'deleteItem') {
-      result = deleteItem(payload.rowIndex, payload.note);
+      result = deleteItem(payload.rowIndex);
     } else if (action === 'manageItem') {
       result = manageItem(payload.rowIndex, payload.manageQty, payload.newAction, payload.newDetails, payload.newNotes);
     } else if (action === 'updateStockQuantity') {
       result = updateStockQuantity(payload.rowIndex, payload.newQty);
     }
-
-    return ContentService.createTextOutput(JSON.stringify(result))
-      .setMimeType(ContentService.MimeType.JSON);
-
   } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ success: false, message: err.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
-  } finally {
-    lock.releaseLock();
+    result = { success: false, message: err.toString() };
   }
+
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
-// --- Logic Functions (เหมือนเดิม) ---
+// --- Functions ---
 
 function getDrugList() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -76,6 +61,7 @@ function logActionToSheet(ss, drugName, qty, action, details) {
     sheet = ss.insertSheet(logSheetName);
     const header = ['Timestamp', 'Drug Name', 'Quantity Managed', 'Action Type', 'Details'];
     sheet.appendRow(header);
+    sheet.getRange(1, 1, 1, header.length).setFontWeight("bold").setBackground("#f3f4f6");
   } else if (sheet.getLastRow() === 0) {
     const header = ['Timestamp', 'Drug Name', 'Quantity Managed', 'Action Type', 'Details'];
     sheet.appendRow(header);
@@ -111,6 +97,7 @@ function getReportData() {
   const lastRow = sheet.getLastRow();
   if (lastRow < 2) return [];
   
+  // Fetch columns A to J (10 columns)
   const data = sheet.getRange(2, 1, lastRow - 1, 10).getDisplayValues();
 
   return data.map((row, i) => ({
@@ -122,16 +109,16 @@ function getReportData() {
     expiryDate: row[6], 
     action: row[7], 
     subDetails: row[8],
-    notes: row[9] 
+    notes: row[9] // <--- Column J (Notes) is now included
   })).filter(item => item.drugName && item.drugName !== "");
 }
 
-function deleteItem(rowIndex, note) {
+function deleteItem(rowIndex) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const sheet = ss.getSheetByName('data');
   const idx = parseInt(rowIndex);
   const rowData = sheet.getRange(idx, 1, 1, 10).getDisplayValues()[0];
-  logActionToSheet(ss, rowData[1], rowData[4], "Deleted", `User deleted. Reason: ${note || '-'}`);
+  logActionToSheet(ss, rowData[1], rowData[4], "Deleted", "User deleted entire row");
   sheet.deleteRow(idx);
   return { success: true, message: "Deleted successfully" };
 }
@@ -146,6 +133,10 @@ function manageItem(rowIndex, manageQty, newAction, newDetails, newNotes) {
   const currentQty = parseInt(originalData[4]) || 0;
   const reqQty = parseInt(manageQty);
   const drugName = originalData[1];
+
+  // Sanitize inputs: ensure newDetails and newNotes are strings (default to empty string if falsy)
+  newDetails = newDetails || "";
+  newNotes = newNotes || "";
 
   if (reqQty <= 0) return { success: false, message: "Quantity must be > 0" };
   if (reqQty > currentQty) return { success: false, message: "Not enough stock" };
